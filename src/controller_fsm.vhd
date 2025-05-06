@@ -39,7 +39,25 @@ end controller_fsm;
 
 architecture FSM of controller_fsm is
 
+type sm_state is (clear, operand1, operand2, result);
+
+signal f_Q, f_Q_next: sm_state;
+
 begin
+
+ f_Q_next <= operand1 when (i_adv = '1' and f_Q = clear) else -- going up
+                operand2 when (i_adv = '1' and f_Q = operand1) else -- going up
+                result when (i_adv = '1' and f_Q = operand2) else -- going up
+                clear when (i_adv = '1' and f_Q = result) else -- going up
+                
+                clear; -- default case
+ 
+ o_cycle <= "0001" when(f_Q = clear) else
+               "0010" when(f_Q = operand1) else
+               "0011" when(f_Q = operand2) else
+               "0100" when(f_Q = result) else
+                "0001" when(i_reset = '1');
+
 
 
 end FSM;

@@ -41,7 +41,61 @@ end ALU;
 
 architecture Behavioral of ALU is
 
+component ripple_adder is
+    Port ( A : in STD_LOGIC_VECTOR (3 downto 0);
+           B : in STD_LOGIC_VECTOR (3 downto 0);
+           Cin : in STD_LOGIC;
+           S : out STD_LOGIC_VECTOR (3 downto 0);
+           Cout : out STD_LOGIC);
+end component ;
+    -- Declare signals here
+    signal w_carry  : STD_LOGIC_VECTOR(1 downto 0); -- for ripple between adders
+    signal w_B : STD_LOGIC_VECTOR(7 downto 0);
+    signal w_AddSub : STD_LOGIC_VECTOR(7 downto 0);
+    signal w_result : STD_LOGIC_VECTOR(7 downto 0);
+    
+    
 begin
+-- PORT MAPS --------------------
+    w_B <= not i_B when i_op ="000" 
+    else i_B
+     ;
+           
+    
 
+    ripple_adder_1 : ripple_adder
+    port map(
+    A => i_A(3 downto 0),
+    B => w_B(3 downto 0),
+    Cin => i_op(0),
+    S => w_AddSub(3 downto 0),
+    Cout => w_carry(0)
+    
+    );
+    
+    
+    ripple_adder_2 : ripple_adder
+    port map(
+    A => i_A(7 downto 4),
+    B => w_B(7 downto 4),
+    Cin => w_carry(0),
+    S => w_AddSub(7 downto 4),
+    Cout => w_carry(1)
+    
+    );
+    
+    w_result <= w_AddSub(7 downto 0) when "000" else
+                w_AddSub(7 downto 0) when "001" else
+                (i_A and i_B) when "010" else
+                (i_A or i_B) when "011" else
+                (others => '0');
+    
+    o_flags(3) <= w_AddSub(7);
+    o_flags(2) <= '1' when (w_result = "00000000")
+                   else '0';
+    o_flags(1) <= w_carry(1) and not(i_op(1));
+    o_flags(0) <= not(i_A(7) xor i_B(7) xor i_op(0)) and (i_A(7) xor w_result(7)) and (not i_op(1));
+                
+    o_result <= w_result;
 
 end Behavioral;
