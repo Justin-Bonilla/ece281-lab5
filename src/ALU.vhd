@@ -84,10 +84,10 @@ begin
     
     );
     
-    w_result <= w_AddSub(7 downto 0) when "000" else
-                w_AddSub(7 downto 0) when "001" else
-                (i_A and i_B) when "010" else
-                (i_A or i_B) when "011" else
+    w_result <= w_AddSub(7 downto 0) when i_op = "000" else
+                w_AddSub(7 downto 0) when i_op = "001" else
+                (i_A and i_B) when i_op = "010" else
+                (i_A or i_B) when i_op = "011" else
                 (others => '0');
     
     o_flags(3) <= w_AddSub(7);

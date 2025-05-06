@@ -58,6 +58,14 @@ begin
                "0100" when(f_Q = result) else
                 "0001" when(i_reset = '1');
 
+fsm_proc : process(i_adv, i_reset)
+	begin
+		if i_reset = '1' then
+			o_cycle <= "0001";
+		elsif rising_edge(i_adv) then
+			f_Q <= f_Q_next;
+		end if;
+	end process fsm_proc;
 
 
 end FSM;
