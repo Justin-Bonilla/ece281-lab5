@@ -43,14 +43,7 @@ entity top_basys3 is
 end top_basys3;
 
 architecture top_basys3_arch of top_basys3 is 
-  
-	-- declare components and signals
-	 signal w_fsm, w_hund, w_tens, w_ones, w_data, w_TDMsel: STD_LOGIC_VECTOR(3 downto 0);
-    signal w_decoder, w_sevseg_out : std_logic_vector(6 downto 0);
-    signal w_result, w_mux1 : std_logic_vector(7 downto 0);
-    signal w_clk, w_sign : std_logic;
-    signal w_flags : std_logic_vector(3 downto 0);
-    signal w_operand1, w_operand2 : std_logic_vector(7 downto 0);
+-- declare components and signals
 --signals:
 
     
@@ -106,7 +99,16 @@ component twos_comp is
     );
 end component;
 
-
+--signals 
+    signal w_fsm, w_hund, w_tens, w_ones, w_dataTDM, w_TDMsel: std_logic_vector(3 downto 0);
+    signal w_decoder, w_sevseg_out : std_logic_vector(6 downto 0);
+    signal w_result, w_mux1 : std_logic_vector(7 downto 0);
+    signal w_clk, w_sign : std_logic;
+    signal w_flgs : std_logic_vector(3 downto 0);
+    signal w_ff1, w_ff2 : std_logic_vector(7 downto 0);
+    
+    
+    
 begin
   -- PORT MAPS ----------------------------------------
     clkDiv_inst : clock_divider 
@@ -126,11 +128,11 @@ begin
         
     ALU_inst : ALU
         port map(
-            i_A      => w_operand1,
-            i_B      => w_operand2,
+            i_A      => w_ff1,
+            i_B      => w_ff2,
             i_op     => sw(2 downto 0),
             o_result => w_result,
-            o_flags  => w_flags
+            o_flags  => w_flgs
         );    
         
     twos_comp_inst : twos_comp
@@ -151,13 +153,13 @@ begin
         i_D2    => w_hund,
       i_D1    => w_tens,    
       i_D0    => w_ones,  
-      o_data  => w_data,    
+      o_data  => w_dataTDM,    
       o_sel   => w_TDMsel    
   );
   
     sevenSeg_inst : sevenseg_decoder
         port map ( 
-           i_Hex => w_data,
+           i_Hex => w_dataTDM,
            o_seg_n => w_decoder
         );
 
@@ -165,23 +167,26 @@ begin
   -- CONCURRENT STATEMENTS ----------------------------
   
   --flip flops
-  w_operand1 <= sw(7 downto 0) when w_fsm = "0001" else
-           w_operand1;
+  w_ff1 <= sw(7 downto 0) when w_fsm = "0001" else
+           w_ff1;
   
-  w_operand2 <= sw(7 downto 0) when w_fsm = "0010" else
-           w_operand2;
+  w_ff2 <= sw(7 downto 0) when w_fsm = "0010" else
+           w_ff2;
   
   --mux1
   with w_fsm select
-  w_mux1 <= w_operand1 when "0010",
-            w_operand2 when "0100",
+  w_mux1 <= w_ff1 when "0010",
+            w_ff2 when "0100",
             w_result when others;    
+  --mux2
+    --w_sevseg_out <= "0111111" when w_TDMsel = "0111" and w_flgs(3) = '1' else
+    --                "1111111";
                      
     -- anodes, display, and leds
     an(3 downto 0) <= --"1111" when w_fsm = "0001" else
                       w_TDMsel;
     seg(6 downto 0) <= w_decoder; --w_sevseg_out;
     led(3 downto 0) <= w_fsm;
-    led(15 downto 12) <= w_flags;
+    led(15 downto 12) <= w_flgs;
     led(11 downto 4) <= (others => '0'); --grounded leds
 end top_basys3_arch;

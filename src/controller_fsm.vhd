@@ -54,14 +54,13 @@ begin
  
  o_cycle <= "0001" when(f_Q = clear) else
                "0010" when(f_Q = operand1) else
-               "0011" when(f_Q = operand2) else
-               "0100" when(f_Q = result) else
-                "0001" when(i_reset = '1');
+               "0100" when(f_Q = operand2) else
+               "1000" when(f_Q = result);
 
 fsm_proc : process(i_adv, i_reset)
 	begin
 		if i_reset = '1' then
-			o_cycle <= "0001";
+			f_Q <= clear;
 		elsif rising_edge(i_adv) then
 			f_Q <= f_Q_next;
 		end if;
